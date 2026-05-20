@@ -14,7 +14,6 @@ import {
   ZoomIn,
   ZoomOut,
   TrendingUp,
-  Tag,
   CalendarCheck
 } from 'lucide-react';
 
@@ -55,8 +54,6 @@ export default function App() {
   // Grouping State
   const [isGroupingMode, setIsGroupingMode] = useState(false);
   const [groupStart, setGroupStart] = useState(null);
-  const [pendingGroup, setPendingGroup] = useState(null);
-  const [isGroupLabelModalOpen, setIsGroupLabelModalOpen] = useState(false);
 
   // Zoom State
   const [isZoomed, setIsZoomed] = useState(false);
@@ -175,15 +172,13 @@ export default function App() {
       if (!groupStart) {
         setGroupStart(dateKey);
       } else {
-        const draft = {
+        const newGroup = {
           id: Date.now().toString(),
           mode: calendarMode,
           start: groupStart < dateKey ? groupStart : dateKey,
           end: groupStart > dateKey ? groupStart : dateKey,
-          label: '',
         };
-        setPendingGroup(draft);
-        setIsGroupLabelModalOpen(true);
+        setGroups(prev => [...prev, newGroup]);
         setGroupStart(null);
         setIsGroupingMode(false);
       }
@@ -340,8 +335,8 @@ export default function App() {
               {activeGroups.map(g => (
                 <div key={g.id} className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
-                    <Tag size={12} />
-                    {g.label ? g.label : 'Group'}: {g.start.slice(5)} → {g.end.slice(5)}
+                    <Maximize2 size={12} />
+                    Grouped: {g.start} → {g.end}
                   </span>
                   <button
                     onClick={() => removeGroup(g.id)}
@@ -485,59 +480,6 @@ export default function App() {
     );
   };
 
-  // --- Group Label Modal ---
-  const GroupLabelModal = () => {
-    const [labelInput, setLabelInput] = useState('');
-    if (!isGroupLabelModalOpen || !pendingGroup) return null;
-
-    const confirm = () => {
-      setGroups(prev => [...prev, { ...pendingGroup, label: labelInput.trim() }]);
-      setIsGroupLabelModalOpen(false);
-      setPendingGroup(null);
-    };
-    const skip = () => {
-      setGroups(prev => [...prev, pendingGroup]);
-      setIsGroupLabelModalOpen(false);
-      setPendingGroup(null);
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4 pb-0 sm:pb-4">
-        <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl sm:rounded-2xl p-5 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <Tag size={18} className="text-blue-500" /> Name this group
-            </h3>
-            <button onClick={skip} className="p-2 bg-gray-100 dark:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300">
-              <X size={18} />
-            </button>
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {pendingGroup.start.slice(5)} → {pendingGroup.end.slice(5)}
-            &nbsp;·&nbsp;{calendarMode === 'work' ? 'Work' : 'Personal'}
-          </p>
-          <input
-            autoFocus
-            type="text"
-            placeholder="e.g. Vacation, Sprint, Conference…"
-            value={labelInput}
-            onChange={e => setLabelInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && confirm()}
-            className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <div className="flex gap-3">
-            <button onClick={skip} className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300 text-sm">
-              Skip
-            </button>
-            <button onClick={confirm} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm">
-              Save Group
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   // Render individual month for Calendar view
   const renderCalendarMonth = (monthIndex) => {
     const daysInMonth = getDaysInMonth(CURRENT_YEAR, monthIndex);
@@ -545,31 +487,11 @@ export default function App() {
     const blanks = Array.from({ length: firstDay }, (_, i) => i);
     const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-    const monthGroups = groups.filter(g =>
-      g.mode === calendarMode && (
-        parseInt(g.start.split('-')[1]) - 1 === monthIndex ||
-        parseInt(g.end.split('-')[1]) - 1 === monthIndex ||
-        (parseInt(g.start.split('-')[1]) - 1 < monthIndex && parseInt(g.end.split('-')[1]) - 1 > monthIndex)
-      )
-    );
-
     return (
       <div id={`month-${monthIndex}`} key={monthIndex} className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 mb-6 shrink-0 snap-start">
-        <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-100 mb-2 flex items-center justify-between">
+        <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-100 mb-4 flex items-center justify-between">
           <span>{MONTHS[monthIndex]} <span className="text-gray-400 dark:text-gray-500 font-medium ml-1">{CURRENT_YEAR}</span></span>
         </h2>
-
-        {/* Group label pills for this month */}
-        {monthGroups.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {monthGroups.map(g => (
-              <span key={g.id} className="inline-flex items-center gap-1 text-[11px] font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-2 py-0.5 rounded-full">
-                <Tag size={10} />
-                {g.label || 'Group'} · {g.start.slice(5)}–{g.end.slice(5)}
-              </span>
-            ))}
-          </div>
-        )}
 
         <div className="grid grid-cols-7 gap-y-1 text-center text-sm mb-2">
           {DAYS.map((day, idx) => (
@@ -881,7 +803,6 @@ export default function App() {
       {/* Modals */}
       <EventModal />
       <TrackerModal />
-      <GroupLabelModal />
 
     </div>
   );
