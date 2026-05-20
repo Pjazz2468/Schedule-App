@@ -113,6 +113,7 @@ export default function App() {
   const [activeCell, setActiveCell] = useState(null);
   const [isTrackerModalOpen, setIsTrackerModalOpen] = useState(false);
   const [trackerModalType, setTrackerModalType] = useState('target');
+  const [confirmReset, setConfirmReset] = useState(false);
 
   // --- Persist to localStorage ---
   useEffect(() => { save('activeTab', activeTab); }, [activeTab]);
@@ -221,7 +222,7 @@ export default function App() {
 
     if (cellData && cellData.target) {
       setActiveCell(cellKey);
-      setTrackerModalType('actual');
+      setTrackerModalType('edit');
       setIsTrackerModalOpen(true);
     }
   };
@@ -414,67 +415,109 @@ export default function App() {
 
   const TrackerModal = () => {
     if (!isTrackerModalOpen) return null;
+    const currentCell = activeCell ? trackerData[activeCell] : null;
+    const isEdit = trackerModalType === 'edit';
+
+    const [targetVal, setTargetVal] = useState(isEdit && currentCell ? String(currentCell.target) : '');
+    const [actualVal, setActualVal] = useState(isEdit && currentCell?.actual != null ? String(currentCell.actual) : '');
     const [inputValue, setInputValue] = useState('');
 
-    const handleSave = () => {
-      const num = parseInt(inputValue, 10);
-      if (isNaN(num)) return;
+    const clearCell = () => {
+      setTrackerData(prev => { const n = { ...prev }; delete n[activeCell]; return n; });
+      setIsTrackerModalOpen(false);
+    };
 
-      if (trackerModalType === 'target') {
+    const handleSave = () => {
+      if (isEdit) {
+        const tNum = parseInt(targetVal, 10);
+        if (isNaN(tNum)) return;
+        const aNum = parseInt(actualVal, 10);
+        setTrackerData(prev => ({
+          ...prev,
+          [activeCell]: {
+            target: tNum,
+            actual: isNaN(aNum) ? (prev[activeCell]?.actual ?? null) : aNum,
+            crossed: prev[activeCell]?.crossed ?? false,
+          }
+        }));
+      } else {
+        const num = parseInt(inputValue, 10);
+        if (isNaN(num)) return;
         setTrackerData(prev => ({
           ...prev,
           [activeCell]: { target: num, actual: null, crossed: false }
         }));
-      } else {
-        setTrackerData(prev => ({
-          ...prev,
-          [activeCell]: { ...prev[activeCell], actual: num, crossed: true }
-        }));
       }
       setIsTrackerModalOpen(false);
-      setInputValue('');
     };
 
     return (
       <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-gray-800 w-full max-w-sm rounded-2xl p-6">
-          <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-            {trackerModalType === 'target' ? 'Set Target Number' : 'Enter Actual Hit'}
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            {trackerModalType === 'target' ? 'What is the goal for this day?' : 'You missed the target. What was the actual number hit?'}
-          </p>
-          <input
-            type="number"
-            autoFocus
-            placeholder={trackerModalType === 'target' ? 'e.g., 100' : 'e.g., 85'}
-            className="w-full p-4 text-2xl font-bold text-center border-2 border-gray-200 dark:border-gray-600 rounded-xl mb-6 focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            value={inputValue}
-            onChange={e => setInputValue(e.target.value)}
-          />
-          <div className="flex gap-3">
-            <button 
-              onClick={() => {
-                if (trackerModalType === 'target') {
-                  setTrackerData(prev => {
-                    const newData = {...prev};
-                    delete newData[activeCell];
-                    return newData;
-                  });
-                }
-                setIsTrackerModalOpen(false);
-              }} 
-              className="flex-1 p-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300"
-            >
-              {trackerModalType === 'target' ? 'Clear' : 'Cancel'}
-            </button>
-            <button 
-              onClick={handleSave}
-              className="flex-1 p-3 bg-blue-600 text-white rounded-xl font-bold"
-            >
-              Save
-            </button>
-          </div>
+          {isEdit ? (
+            <>
+              <h3 className="text-xl font-bold mb-1 text-gray-900 dark:text-gray-100">Edit Cell</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Change the target or actual value.</p>
+              <div className="flex flex-col gap-4 mb-6">
+                <div>
+                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block">Target</label>
+                  <input
+                    type="number"
+                    autoFocus
+                    placeholder="e.g., 100"
+                    className="w-full p-3 text-2xl font-bold text-center border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    value={targetVal}
+                    onChange={e => setTargetVal(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block">
+                    Actual <span className="font-normal normal-case">(optional — leave blank to keep existing)</span>
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="e.g., 85"
+                    className="w-full p-3 text-2xl font-bold text-center border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    value={actualVal}
+                    onChange={e => setActualVal(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={clearCell}
+                  className="flex-1 p-3 bg-red-50 dark:bg-red-900/30 text-red-500 border border-red-200 dark:border-red-700 rounded-xl font-bold text-sm"
+                >
+                  Clear Cell
+                </button>
+                <button onClick={handleSave} className="flex-1 p-3 bg-blue-600 text-white rounded-xl font-bold">
+                  Save
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">Set Target Number</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">What is the goal for this day?</p>
+              <input
+                type="number"
+                autoFocus
+                placeholder="e.g., 100"
+                className="w-full p-4 text-2xl font-bold text-center border-2 border-gray-200 dark:border-gray-600 rounded-xl mb-6 focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                value={inputValue}
+                onChange={e => setInputValue(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSave()}
+              />
+              <div className="flex gap-3">
+                <button onClick={clearCell} className="flex-1 p-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300">
+                  Clear
+                </button>
+                <button onClick={handleSave} className="flex-1 p-3 bg-blue-600 text-white rounded-xl font-bold">
+                  Save
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );
@@ -625,17 +668,52 @@ export default function App() {
       )}
 
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-100 flex items-center">
+        <div className="flex justify-between items-center mb-6 gap-2">
+          <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-100 shrink-0">
             {MONTHS[trackerMonth]} Target
           </h2>
-          <select 
-            value={trackerMonth} 
-            onChange={(e) => setTrackerMonth(parseInt(e.target.value))}
-            className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg p-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
-          </select>
+          <div className="flex items-center gap-2">
+            {confirmReset ? (
+              <>
+                <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">Reset all?</span>
+                <button
+                  onClick={() => {
+                    setTrackerData(prev => {
+                      const next = { ...prev };
+                      Object.keys(next).forEach(k => {
+                        if (k.startsWith(`${trackerMonth}-`)) delete next[k];
+                      });
+                      return next;
+                    });
+                    setConfirmReset(false);
+                  }}
+                  className="text-xs font-bold text-white bg-red-500 px-3 py-1.5 rounded-lg shrink-0"
+                >
+                  Yes, Reset
+                </button>
+                <button
+                  onClick={() => setConfirmReset(false)}
+                  className="text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg shrink-0"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setConfirmReset(true)}
+                className="flex items-center gap-1 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 px-3 py-1.5 rounded-lg shrink-0"
+              >
+                <Trash2 size={12} /> Reset
+              </button>
+            )}
+            <select
+              value={trackerMonth}
+              onChange={(e) => { setTrackerMonth(parseInt(e.target.value)); setConfirmReset(false); }}
+              className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg p-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+            </select>
+          </div>
         </div>
 
         <div className="min-w-[300px]">
