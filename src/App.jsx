@@ -10,7 +10,10 @@ import {
   User, 
   Check, 
   Trash2,
-  Maximize2
+  Maximize2,
+  ZoomIn,
+  ZoomOut,
+  TrendingUp
 } from 'lucide-react';
 
 // --- Utility Functions ---
@@ -50,6 +53,9 @@ export default function App() {
   // Grouping State
   const [isGroupingMode, setIsGroupingMode] = useState(false);
   const [groupStart, setGroupStart] = useState(null);
+
+  // Zoom State
+  const [isZoomed, setIsZoomed] = useState(false);
 
   // Modals
   const [selectedDate, setSelectedDate] = useState(null);
@@ -370,7 +376,7 @@ export default function App() {
           <span>{MONTHS[monthIndex]} <span className="text-gray-400 dark:text-gray-500 font-medium ml-1">{CURRENT_YEAR}</span></span>
         </h2>
 
-        <div className="grid grid-cols-7 gap-y-2 text-center text-sm mb-2">
+        <div className="grid grid-cols-7 gap-y-1 text-center text-sm mb-2">
           {DAYS.map((day, idx) => (
             <div key={idx} className={`font-bold ${idx === 0 || idx === 6 ? 'text-red-400' : 'text-gray-400 dark:text-gray-500'}`}>
               {day}
@@ -379,11 +385,12 @@ export default function App() {
         </div>
 
         <div className="grid grid-cols-7 gap-y-1 text-center relative z-10">
-          {blanks.map(blank => <div key={`blank-${blank}`} className="p-2"></div>)}
+          {blanks.map(blank => <div key={`blank-${blank}`} className={isZoomed ? "min-h-14" : "p-2"}></div>)}
 
           {days.map(day => {
             const dateKey = formatDateKey(CURRENT_YEAR, monthIndex, day);
-            const hasEvents = getDayEvents(dateKey).length > 0;
+            const dayEvents = getDayEvents(dateKey);
+            const hasEvents = dayEvents.length > 0;
             const activeGroups = isDayGrouped(dateKey);
 
             let groupClasses = "";
@@ -394,12 +401,37 @@ export default function App() {
               const isOnly = isStart && isEnd;
 
               groupClasses = "bg-blue-100/60 dark:bg-blue-900/40 z-0 ";
-              if (isOnly) groupClasses += "rounded-full ";
-              else if (isStart) groupClasses += "rounded-l-full ml-1 ";
-              else if (isEnd) groupClasses += "rounded-r-full mr-1 ";
+              if (isOnly) groupClasses += "rounded-lg ";
+              else if (isStart) groupClasses += "rounded-l-lg ml-0.5 ";
+              else if (isEnd) groupClasses += "rounded-r-lg mr-0.5 ";
             }
 
             const isSelectedGroupStart = groupStart === dateKey;
+
+            if (isZoomed) {
+              return (
+                <div key={day} className={`relative flex flex-col items-center px-0.5 pb-1 min-h-14 ${groupClasses}`}>
+                  <button
+                    onClick={() => handleDayClick(CURRENT_YEAR, monthIndex, day)}
+                    className={`
+                      w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-1 relative z-10 text-sm font-bold
+                      ${isSelectedGroupStart ? 'bg-orange-500 text-white animate-pulse' : ''}
+                      ${hasEvents && !isSelectedGroupStart ? 'bg-blue-600 text-white shadow-sm' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}
+                    `}
+                  >
+                    {day}
+                  </button>
+                  {dayEvents.slice(0, 2).map((ev, i) => (
+                    <p key={i} className="w-full text-[9px] leading-tight text-blue-700 dark:text-blue-300 font-semibold truncate px-0.5 mt-0.5">
+                      {ev.text}
+                    </p>
+                  ))}
+                  {dayEvents.length > 2 && (
+                    <p className="text-[8px] text-gray-400 dark:text-gray-500">+{dayEvents.length - 2}</p>
+                  )}
+                </div>
+              );
+            }
 
             return (
               <div key={day} className={`relative p-1 ${groupClasses}`}>
@@ -429,7 +461,52 @@ export default function App() {
     const rows = [0, 1, 2, 3, 4];
     const cols = [0, 1, 2, 3, 4];
 
+    // Monthly summary stats
+    const allCells = rows.flatMap(r => cols.map(c => trackerData[`${trackerMonth}-${r}-${c}`]));
+    const withTarget = allCells.filter(c => c && c.target);
+    const hit = withTarget.filter(c => c.crossed && (c.actual === null || c.actual >= c.target));
+    const missed = withTarget.filter(c => c.crossed && c.actual !== null && c.actual < c.target);
+    const pending = withTarget.filter(c => !c.crossed);
+    const score = withTarget.length > 0 ? Math.round((hit.length / withTarget.length) * 100) : null;
+
     return (
+      <div className="space-y-4">
+
+      {/* Monthly Summary Card */}
+      {withTarget.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-extrabold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+              <TrendingUp size={18} className="text-blue-600" /> {MONTHS[trackerMonth]} Summary
+            </h2>
+            <span className={`text-2xl font-extrabold ${score >= 80 ? 'text-green-500' : score >= 50 ? 'text-orange-500' : 'text-red-500'}`}>
+              {score}%
+            </span>
+          </div>
+          {/* Progress bar */}
+          <div className="w-full h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden mb-3">
+            <div
+              className={`h-full rounded-full transition-all ${score >= 80 ? 'bg-green-500' : score >= 50 ? 'bg-orange-500' : 'bg-red-500'}`}
+              style={{ width: `${score}%` }}
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="bg-green-50 dark:bg-green-900/30 rounded-xl p-2">
+              <p className="text-xl font-extrabold text-green-600">{hit.length}</p>
+              <p className="text-[10px] font-bold text-green-600/80 uppercase tracking-wider">Hit</p>
+            </div>
+            <div className="bg-red-50 dark:bg-red-900/30 rounded-xl p-2">
+              <p className="text-xl font-extrabold text-red-500">{missed.length}</p>
+              <p className="text-[10px] font-bold text-red-500/80 uppercase tracking-wider">Missed</p>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-2">
+              <p className="text-xl font-extrabold text-gray-600 dark:text-gray-300">{pending.length}</p>
+              <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Left</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-100 flex items-center">
@@ -505,11 +582,13 @@ export default function App() {
           <p className="flex items-center gap-2"><span className="w-4 h-4 bg-red-100 dark:bg-red-900/50 border border-red-200 dark:border-red-700 text-red-600 rounded flex items-center justify-center text-[10px]">-</span> Long-press to record misses.</p>
         </div>
       </div>
+
+      </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col w-full max-w-md mx-auto relative shadow-2xl overflow-hidden sm:border-x border-gray-200 dark:border-gray-700">
+    <div className="h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col w-full max-w-md mx-auto relative shadow-2xl overflow-hidden sm:border-x border-gray-200 dark:border-gray-700">
 
       {/* Top Header */}
       <header className="bg-white dark:bg-gray-800 px-4 pt-8 pb-4 shadow-sm z-20 flex justify-between items-center relative">
@@ -541,21 +620,32 @@ export default function App() {
           <div className="h-full flex flex-col relative">
 
             {/* Grouping Toolbar */}
-            <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center z-10 shrink-0">
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center z-10 shrink-0 gap-2">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">
                 {isGroupingMode ? (groupStart ? 'Select End Date' : 'Select Start Date') : 'Group multiple days'}
               </span>
-              <button
-                onClick={() => {
-                  setIsGroupingMode(!isGroupingMode);
-                  setGroupStart(null);
-                }}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${
-                  isGroupingMode ? 'bg-orange-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                }`}
-              >
-                <Maximize2 size={16} /> {isGroupingMode ? 'Cancel' : 'Group Days'}
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => setIsZoomed(z => !z)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${
+                    isZoomed ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {isZoomed ? <ZoomOut size={15} /> : <ZoomIn size={15} />}
+                  {isZoomed ? 'Compact' : 'Detailed'}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsGroupingMode(!isGroupingMode);
+                    setGroupStart(null);
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${
+                    isGroupingMode ? 'bg-orange-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  <Maximize2 size={15} /> {isGroupingMode ? 'Cancel' : 'Group'}
+                </button>
+              </div>
             </div>
 
             {/* Scrollable Calendar */}
