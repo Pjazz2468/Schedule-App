@@ -23,13 +23,29 @@ const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
 const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 const formatDateKey = (year, month, day) => `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
+// --- localStorage helpers ---
+const load = (key, fallback) => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const save = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+};
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState('calendar'); // 'calendar' or 'tracker'
+  const [activeTab, setActiveTab] = useState(() => load('activeTab', 'calendar'));
 
   // Calendar State
-  const [calendarMode, setCalendarMode] = useState('work'); // 'work' or 'personal'
-  const [events, setEvents] = useState({}); // { 'work_2026-05-11': [{id, text, time, reminder}] }
-  const [groups, setGroups] = useState([]); // [{id, mode, start: '2026-05-11', end: '2026-05-15'}]
+  const [calendarMode, setCalendarMode] = useState(() => load('calendarMode', 'work'));
+  const [events, setEvents] = useState(() => load('events', {}));
+  const [groups, setGroups] = useState(() => load('groups', []));
 
   // Grouping State
   const [isGroupingMode, setIsGroupingMode] = useState(false);
@@ -40,11 +56,19 @@ export default function App() {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
   // Tracker State
-  const [trackerMonth, setTrackerMonth] = useState(4); // Default May
-  const [trackerData, setTrackerData] = useState({}); // { '2026-04-row0-col1': { target: 10, actual: null, crossed: false } }
+  const [trackerMonth, setTrackerMonth] = useState(() => load('trackerMonth', 4));
+  const [trackerData, setTrackerData] = useState(() => load('trackerData', {}));
   const [activeCell, setActiveCell] = useState(null);
   const [isTrackerModalOpen, setIsTrackerModalOpen] = useState(false);
-  const [trackerModalType, setTrackerModalType] = useState('target'); // 'target' or 'actual'
+  const [trackerModalType, setTrackerModalType] = useState('target');
+
+  // --- Persist to localStorage ---
+  useEffect(() => { save('activeTab', activeTab); }, [activeTab]);
+  useEffect(() => { save('calendarMode', calendarMode); }, [calendarMode]);
+  useEffect(() => { save('events', events); }, [events]);
+  useEffect(() => { save('groups', groups); }, [groups]);
+  useEffect(() => { save('trackerMonth', trackerMonth); }, [trackerMonth]);
+  useEffect(() => { save('trackerData', trackerData); }, [trackerData]);
 
   // --- Calendar Logic ---
 
