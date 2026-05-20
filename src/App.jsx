@@ -232,9 +232,14 @@ export default function App() {
     if (!isEventModalOpen || !selectedDate) return null;
     const { dateKey } = selectedDate;
     const dayEvents = getDayEvents(dateKey);
+    const activeGroups = isDayGrouped(dateKey);
     const [newPlan, setNewPlan] = useState('');
     const [newTime, setNewTime] = useState('');
     const [hasReminder, setHasReminder] = useState(false);
+
+    const removeGroup = (groupId) => {
+      setGroups(prev => prev.filter(g => g.id !== groupId));
+    };
 
     const savePlan = () => {
       if (!newPlan.trim()) return;
@@ -276,6 +281,26 @@ export default function App() {
               <X size={20} />
             </button>
           </div>
+
+          {/* Group banner — shown when this day belongs to one or more groups */}
+          {activeGroups.length > 0 && (
+            <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20 flex flex-col gap-1.5">
+              {activeGroups.map(g => (
+                <div key={g.id} className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                    <Maximize2 size={12} />
+                    Grouped: {g.start} → {g.end}
+                  </span>
+                  <button
+                    onClick={() => removeGroup(g.id)}
+                    className="flex items-center gap-1 text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 px-2 py-1 rounded-lg"
+                  >
+                    <X size={11} /> Ungroup
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="p-4 overflow-y-auto flex-1 bg-gray-50 dark:bg-gray-900">
             {dayEvents.length === 0 ? (
