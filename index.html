@@ -10,15 +10,25 @@
 
     <!-- iOS PWA support -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Schedule" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
 
-    <!-- Theme color for browser chrome -->
-    <meta name="theme-color" content="#2563eb" />
+    <!-- Theme color: adapts to light/dark -->
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1f2937" media="(prefers-color-scheme: dark)" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Apply dark class before paint to avoid flash
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+      }
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        document.documentElement.classList.toggle('dark', e.matches);
+      });
+    </script>
   </body>
 </html>

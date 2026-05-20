@@ -79,7 +79,6 @@ export default function App() {
       if (!groupStart) {
         setGroupStart(dateKey);
       } else {
-        // End group
         const newGroup = {
           id: Date.now().toString(),
           mode: calendarMode,
@@ -116,7 +115,6 @@ export default function App() {
       setTrackerModalType('target');
       setIsTrackerModalOpen(true);
     } else {
-      // Toggle crossed status
       setTrackerData(prev => ({
         ...prev,
         [cellKey]: { ...prev[cellKey], crossed: !prev[cellKey].crossed, actual: null }
@@ -218,25 +216,25 @@ export default function App() {
 
     return (
       <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4 pb-0 sm:pb-4">
-        <div className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[85vh]">
-          <div className="flex justify-between items-center p-4 border-b">
-            <h3 className="text-lg font-bold">
+        <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[85vh]">
+          <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
               {MONTHS[selectedDate.month]} {selectedDate.day}, {selectedDate.year}
             </h3>
-            <button onClick={() => setIsEventModalOpen(false)} className="p-2 bg-gray-100 rounded-full">
+            <button onClick={() => setIsEventModalOpen(false)} className="p-2 bg-gray-100 dark:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300">
               <X size={20} />
             </button>
           </div>
 
-          <div className="p-4 overflow-y-auto flex-1 bg-gray-50">
+          <div className="p-4 overflow-y-auto flex-1 bg-gray-50 dark:bg-gray-900">
             {dayEvents.length === 0 ? (
-              <p className="text-gray-500 text-center py-4 text-sm">No plans for this day yet.</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-4 text-sm">No plans for this day yet.</p>
             ) : (
               <div className="space-y-3 mb-6">
                 {dayEvents.map(ev => (
-                  <div key={ev.id} className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start">
+                  <div key={ev.id} className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-start">
                     <div>
-                      <p className="font-medium text-gray-800">{ev.text}</p>
+                      <p className="font-medium text-gray-800 dark:text-gray-100">{ev.text}</p>
                       {(ev.time || ev.reminder) && (
                         <div className="flex items-center gap-3 mt-2 text-xs text-blue-600 font-medium">
                           {ev.time && <span className="flex items-center gap-1"><Clock size={12} /> {ev.time}</span>}
@@ -252,26 +250,26 @@ export default function App() {
               </div>
             )}
 
-            <div className="bg-white p-4 rounded-xl border border-gray-200">
-              <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Add New Plan</h4>
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+              <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Add New Plan</h4>
               <input
                 type="text"
                 placeholder="What's the plan?"
-                className="w-full p-3 border rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 value={newPlan}
                 onChange={e => setNewPlan(e.target.value)}
               />
               <div className="flex gap-2 mb-4">
                 <input
                   type="time"
-                  className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 p-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   value={newTime}
                   onChange={e => setNewTime(e.target.value)}
                 />
                 <button
                   onClick={() => setHasReminder(!hasReminder)}
                   className={`p-3 rounded-lg border flex items-center justify-center transition-colors ${
-                    hasReminder ? 'bg-orange-500 border-orange-500 text-white' : 'bg-gray-50 border-gray-200 text-gray-400'
+                    hasReminder ? 'bg-orange-500 border-orange-500 text-white' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-500'
                   }`}
                 >
                   <Bell size={20} />
@@ -305,8 +303,6 @@ export default function App() {
           [activeCell]: { target: num, actual: null, crossed: false }
         }));
       } else {
-        // Actual mode
-        const currentTarget = trackerData[activeCell]?.target || 0;
         setTrackerData(prev => ({
           ...prev,
           [activeCell]: { ...prev[activeCell], actual: num, crossed: true }
@@ -318,18 +314,18 @@ export default function App() {
 
     return (
       <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-        <div className="bg-white w-full max-w-sm rounded-2xl p-6">
-          <h3 className="text-xl font-bold mb-4">
+        <div className="bg-white dark:bg-gray-800 w-full max-w-sm rounded-2xl p-6">
+          <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
             {trackerModalType === 'target' ? 'Set Target Number' : 'Enter Actual Hit'}
           </h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             {trackerModalType === 'target' ? 'What is the goal for this day?' : 'You missed the target. What was the actual number hit?'}
           </p>
           <input
             type="number"
             autoFocus
             placeholder={trackerModalType === 'target' ? 'e.g., 100' : 'e.g., 85'}
-            className="w-full p-4 text-2xl font-bold text-center border-2 border-gray-200 rounded-xl mb-6 focus:outline-none focus:border-blue-500"
+            className="w-full p-4 text-2xl font-bold text-center border-2 border-gray-200 dark:border-gray-600 rounded-xl mb-6 focus:outline-none focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
           />
@@ -337,16 +333,15 @@ export default function App() {
             <button 
               onClick={() => {
                 if (trackerModalType === 'target') {
-                  // Allow clearing target
-                   setTrackerData(prev => {
-                     const newData = {...prev};
-                     delete newData[activeCell];
-                     return newData;
-                   });
+                  setTrackerData(prev => {
+                    const newData = {...prev};
+                    delete newData[activeCell];
+                    return newData;
+                  });
                 }
                 setIsTrackerModalOpen(false);
               }} 
-              className="flex-1 p-3 bg-gray-100 rounded-xl font-bold text-gray-600"
+              className="flex-1 p-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300"
             >
               {trackerModalType === 'target' ? 'Clear' : 'Cancel'}
             </button>
@@ -370,14 +365,14 @@ export default function App() {
     const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
     return (
-      <div key={monthIndex} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6 shrink-0 snap-start">
-        <h2 className="text-xl font-extrabold text-gray-800 mb-4 flex items-center justify-between">
-          <span>{MONTHS[monthIndex]} <span className="text-gray-400 font-medium ml-1">{CURRENT_YEAR}</span></span>
+      <div key={monthIndex} className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 mb-6 shrink-0 snap-start">
+        <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-100 mb-4 flex items-center justify-between">
+          <span>{MONTHS[monthIndex]} <span className="text-gray-400 dark:text-gray-500 font-medium ml-1">{CURRENT_YEAR}</span></span>
         </h2>
 
         <div className="grid grid-cols-7 gap-y-2 text-center text-sm mb-2">
           {DAYS.map((day, idx) => (
-            <div key={idx} className={`font-bold ${idx === 0 || idx === 6 ? 'text-red-400' : 'text-gray-400'}`}>
+            <div key={idx} className={`font-bold ${idx === 0 || idx === 6 ? 'text-red-400' : 'text-gray-400 dark:text-gray-500'}`}>
               {day}
             </div>
           ))}
@@ -391,22 +386,19 @@ export default function App() {
             const hasEvents = getDayEvents(dateKey).length > 0;
             const activeGroups = isDayGrouped(dateKey);
 
-            // Visual logic for groups (the overlapping pill effect)
             let groupClasses = "";
-            let groupStyle = {};
             if (activeGroups.length > 0) {
-              const group = activeGroups[0]; // just handle first group for simplicity
+              const group = activeGroups[0];
               const isStart = group.start === dateKey;
               const isEnd = group.end === dateKey;
               const isOnly = isStart && isEnd;
 
-              groupClasses = "bg-blue-100/60 z-0 ";
+              groupClasses = "bg-blue-100/60 dark:bg-blue-900/40 z-0 ";
               if (isOnly) groupClasses += "rounded-full ";
               else if (isStart) groupClasses += "rounded-l-full ml-1 ";
               else if (isEnd) groupClasses += "rounded-r-full mr-1 ";
             }
 
-            const isSelecting = isGroupingMode && groupStart;
             const isSelectedGroupStart = groupStart === dateKey;
 
             return (
@@ -416,7 +408,7 @@ export default function App() {
                   className={`
                     w-full aspect-square rounded-full flex flex-col items-center justify-center relative z-10
                     ${isSelectedGroupStart ? 'bg-orange-500 text-white animate-pulse' : ''}
-                    ${hasEvents && !isSelectedGroupStart ? 'bg-white border-2 border-blue-600 font-bold shadow-sm' : 'hover:bg-gray-100 font-medium text-gray-700'}
+                    ${hasEvents && !isSelectedGroupStart ? 'bg-white dark:bg-gray-700 border-2 border-blue-600 font-bold shadow-sm text-gray-900 dark:text-gray-100' : 'hover:bg-gray-100 dark:hover:bg-gray-700 font-medium text-gray-700 dark:text-gray-300'}
                   `}
                 >
                   <span className="text-base leading-none">{day}</span>
@@ -434,38 +426,35 @@ export default function App() {
 
   // Render Target Tracker Grid
   const renderTrackerGrid = () => {
-    // 5 rows (weeks), 5 columns (M-F)
     const rows = [0, 1, 2, 3, 4];
     const cols = [0, 1, 2, 3, 4];
 
     return (
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 overflow-x-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-extrabold text-gray-800 flex items-center">
+          <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-100 flex items-center">
             {MONTHS[trackerMonth]} Target
           </h2>
           <select 
             value={trackerMonth} 
             onChange={(e) => setTrackerMonth(parseInt(e.target.value))}
-            className="bg-gray-50 border-gray-200 text-gray-700 rounded-lg p-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg p-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
           </select>
         </div>
 
         <div className="min-w-[300px]">
-          {/* Header */}
-          <div className="grid grid-cols-5 border-b-2 border-gray-800">
+          <div className="grid grid-cols-5 border-b-2 border-gray-800 dark:border-gray-400">
             {WORK_DAYS.map(day => (
-              <div key={day} className="py-3 text-center font-bold text-gray-700 border-r border-gray-200 last:border-0">
+              <div key={day} className="py-3 text-center font-bold text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-0">
                 {day}
               </div>
             ))}
           </div>
 
-          {/* Grid Body */}
           {rows.map(row => (
-            <div key={`row-${row}`} className="grid grid-cols-5 border-b border-gray-200 last:border-b-2 last:border-gray-800">
+            <div key={`row-${row}`} className="grid grid-cols-5 border-b border-gray-200 dark:border-gray-700 last:border-b-2 last:border-gray-800 dark:last:border-gray-400">
               {cols.map(col => {
                 const cellKey = `${trackerMonth}-${row}-${col}`;
                 const cellData = trackerData[cellKey];
@@ -479,28 +468,26 @@ export default function App() {
                   return (
                     <div 
                       {...bind}
-                      className="relative h-20 border-r border-gray-200 last:border-0 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors select-none touch-manipulation"
+                      className="relative h-20 border-r border-gray-200 dark:border-gray-700 last:border-0 flex items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors select-none touch-manipulation"
                     >
                       {cellData && cellData.target ? (
                         <>
-                          <span className="text-xl font-bold text-gray-800">{cellData.target}</span>
+                          <span className="text-xl font-bold text-gray-800 dark:text-gray-100">{cellData.target}</span>
 
-                          {/* Cross Out Line */}
                           {cellData.crossed && (
                             <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
                               <div className="w-[120%] h-0.5 bg-red-500 -rotate-[35deg]"></div>
                             </div>
                           )}
 
-                          {/* Deficit Indicator */}
                           {cellData.crossed && cellData.actual !== null && cellData.actual < cellData.target && (
-                            <div className="absolute top-1 right-1 text-[10px] font-extrabold text-red-600 bg-red-100 rounded p-0.5 px-1 leading-none shadow-sm border border-red-200">
+                            <div className="absolute top-1 right-1 text-[10px] font-extrabold text-red-600 bg-red-100 dark:bg-red-900/50 rounded p-0.5 px-1 leading-none shadow-sm border border-red-200 dark:border-red-700">
                               -{cellData.target - cellData.actual}
                             </div>
                           )}
                         </>
                       ) : (
-                        <span className="text-gray-300 opacity-50"><Plus size={20} /></span>
+                        <span className="text-gray-300 dark:text-gray-600 opacity-50"><Plus size={20} /></span>
                       )}
                     </div>
                   );
@@ -512,35 +499,35 @@ export default function App() {
           ))}
         </div>
 
-        <div className="mt-6 flex flex-col gap-2 text-sm text-gray-500 bg-gray-50 p-4 rounded-xl border border-gray-100">
-          <p className="flex items-center gap-2"><span className="w-4 h-4 bg-gray-200 rounded flex items-center justify-center"><Plus size={12}/></span> Tap empty cell to set goal.</p>
-          <p className="flex items-center gap-2"><span className="w-4 h-4 border border-gray-400 rounded flex items-center justify-center">10</span> Tap number to mark as done.</p>
-          <p className="flex items-center gap-2"><span className="w-4 h-4 bg-red-100 border border-red-200 text-red-600 rounded flex items-center justify-center text-[10px]">-</span> Long-press to record misses.</p>
+        <div className="mt-6 flex flex-col gap-2 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+          <p className="flex items-center gap-2"><span className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center"><Plus size={12}/></span> Tap empty cell to set goal.</p>
+          <p className="flex items-center gap-2"><span className="w-4 h-4 border border-gray-400 dark:border-gray-500 rounded flex items-center justify-center">10</span> Tap number to mark as done.</p>
+          <p className="flex items-center gap-2"><span className="w-4 h-4 bg-red-100 dark:bg-red-900/50 border border-red-200 dark:border-red-700 text-red-600 rounded flex items-center justify-center text-[10px]">-</span> Long-press to record misses.</p>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 font-sans flex flex-col w-full max-w-md mx-auto relative shadow-2xl overflow-hidden sm:border-x border-gray-200">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col w-full max-w-md mx-auto relative shadow-2xl overflow-hidden sm:border-x border-gray-200 dark:border-gray-700">
 
       {/* Top Header */}
-      <header className="bg-white px-4 pt-8 pb-4 shadow-sm z-20 flex justify-between items-center relative">
-        <h1 className="text-2xl font-extrabold tracking-tight text-gray-800">
+      <header className="bg-white dark:bg-gray-800 px-4 pt-8 pb-4 shadow-sm z-20 flex justify-between items-center relative">
+        <h1 className="text-2xl font-extrabold tracking-tight text-gray-800 dark:text-gray-100">
           {activeTab === 'calendar' ? 'Schedule' : 'Tracker'}
         </h1>
 
         {activeTab === 'calendar' && (
-          <div className="flex bg-gray-100 p-1 rounded-xl">
+          <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-xl">
             <button
               onClick={() => setCalendarMode('work')}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${calendarMode === 'work' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${calendarMode === 'work' ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
             >
               <Briefcase size={16} /> Work
             </button>
             <button
               onClick={() => setCalendarMode('personal')}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${calendarMode === 'personal' ? 'bg-white shadow-sm text-purple-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${calendarMode === 'personal' ? 'bg-white dark:bg-gray-600 shadow-sm text-purple-600' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
             >
               <User size={16} /> Personal
             </button>
@@ -554,8 +541,8 @@ export default function App() {
           <div className="h-full flex flex-col relative">
 
             {/* Grouping Toolbar */}
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center z-10 shrink-0">
-              <span className="text-sm font-medium text-gray-600">
+            <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center z-10 shrink-0">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 {isGroupingMode ? (groupStart ? 'Select End Date' : 'Select Start Date') : 'Group multiple days'}
               </span>
               <button
@@ -564,7 +551,7 @@ export default function App() {
                   setGroupStart(null);
                 }}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${
-                  isGroupingMode ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  isGroupingMode ? 'bg-orange-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 <Maximize2 size={16} /> {isGroupingMode ? 'Cancel' : 'Group Days'}
@@ -572,30 +559,30 @@ export default function App() {
             </div>
 
             {/* Scrollable Calendar */}
-            <div className="flex-1 overflow-y-auto p-4 pb-24 snap-y snap-mandatory bg-gray-100 scroll-smooth">
+            <div className="flex-1 overflow-y-auto p-4 pb-24 snap-y snap-mandatory bg-gray-100 dark:bg-gray-900 scroll-smooth">
               {[...Array(12)].map((_, i) => renderCalendarMonth(i))}
             </div>
 
           </div>
         ) : (
-          <div className="h-full overflow-y-auto p-4 pb-24">
+          <div className="h-full overflow-y-auto p-4 pb-24 bg-gray-100 dark:bg-gray-900">
             {renderTrackerGrid()}
           </div>
         )}
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="absolute bottom-0 w-full bg-white border-t border-gray-200 pb-safe pt-2 px-6 flex justify-around items-center pb-6 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-20 rounded-t-2xl">
+      <nav className="absolute bottom-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 pb-safe pt-2 px-6 flex justify-around items-center pb-6 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.3)] z-20 rounded-t-2xl">
         <button 
           onClick={() => setActiveTab('calendar')}
-          className={`flex flex-col items-center gap-1 p-2 w-20 transition-colors ${activeTab === 'calendar' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+          className={`flex flex-col items-center gap-1 p-2 w-20 transition-colors ${activeTab === 'calendar' ? 'text-blue-600' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
         >
           <CalendarIcon size={24} className={activeTab === 'calendar' ? 'stroke-[2.5px]' : ''} />
           <span className="text-[10px] font-bold uppercase tracking-widest">Calendar</span>
         </button>
         <button 
           onClick={() => setActiveTab('tracker')}
-          className={`flex flex-col items-center gap-1 p-2 w-20 transition-colors ${activeTab === 'tracker' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+          className={`flex flex-col items-center gap-1 p-2 w-20 transition-colors ${activeTab === 'tracker' ? 'text-blue-600' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
         >
           <Target size={24} className={activeTab === 'tracker' ? 'stroke-[2.5px]' : ''} />
           <span className="text-[10px] font-bold uppercase tracking-widest">Tracker</span>
