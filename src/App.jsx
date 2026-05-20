@@ -56,6 +56,51 @@ export default function App() {
 
   // Zoom State
   const [isZoomed, setIsZoomed] = useState(false);
+  const calendarRef = useRef(null);
+  const isZoomedRef = useRef(false);
+  useEffect(() => { isZoomedRef.current = isZoomed; }, [isZoomed]);
+
+  // Pinch-to-zoom on calendar
+  useEffect(() => {
+    const el = calendarRef.current;
+    if (!el) return;
+
+    let initialDist = null;
+
+    const dist = (t) => {
+      const dx = t[0].clientX - t[1].clientX;
+      const dy = t[0].clientY - t[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const onStart = (e) => {
+      if (e.touches.length === 2) initialDist = dist(e.touches);
+    };
+
+    const onMove = (e) => {
+      if (e.touches.length !== 2 || initialDist === null) return;
+      e.preventDefault();
+      const scale = dist(e.touches) / initialDist;
+      if (scale > 1.25 && !isZoomedRef.current) {
+        isZoomedRef.current = true;
+        setIsZoomed(true);
+      } else if (scale < 0.8 && isZoomedRef.current) {
+        isZoomedRef.current = false;
+        setIsZoomed(false);
+      }
+    };
+
+    const onEnd = (e) => { if (e.touches.length < 2) initialDist = null; };
+
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+    };
+  }, []);
 
   // Modals
   const [selectedDate, setSelectedDate] = useState(null);
@@ -621,35 +666,29 @@ export default function App() {
 
             {/* Grouping Toolbar */}
             <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center z-10 shrink-0 gap-2">
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">
-                {isGroupingMode ? (groupStart ? 'Select End Date' : 'Select Start Date') : 'Group multiple days'}
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate flex items-center gap-1.5">
+                {isGroupingMode
+                  ? (groupStart ? 'Select End Date' : 'Select Start Date')
+                  : isZoomed
+                    ? <><ZoomOut size={14} className="shrink-0" /> Pinch in to compact</>
+                    : <><ZoomIn size={14} className="shrink-0" /> Pinch out to expand</>
+                }
               </span>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => setIsZoomed(z => !z)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${
-                    isZoomed ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {isZoomed ? <ZoomOut size={15} /> : <ZoomIn size={15} />}
-                  {isZoomed ? 'Compact' : 'Detailed'}
-                </button>
-                <button
-                  onClick={() => {
-                    setIsGroupingMode(!isGroupingMode);
-                    setGroupStart(null);
-                  }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${
-                    isGroupingMode ? 'bg-orange-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  <Maximize2 size={15} /> {isGroupingMode ? 'Cancel' : 'Group'}
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  setIsGroupingMode(!isGroupingMode);
+                  setGroupStart(null);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors shrink-0 ${
+                  isGroupingMode ? 'bg-orange-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                <Maximize2 size={15} /> {isGroupingMode ? 'Cancel' : 'Group'}
+              </button>
             </div>
 
             {/* Scrollable Calendar */}
-            <div className="flex-1 overflow-y-auto p-4 pb-24 snap-y snap-mandatory bg-gray-100 dark:bg-gray-900 scroll-smooth">
+            <div ref={calendarRef} className="flex-1 overflow-y-auto p-4 pb-24 snap-y snap-mandatory bg-gray-100 dark:bg-gray-900 scroll-smooth touch-pan-y">
               {[...Array(12)].map((_, i) => renderCalendarMonth(i))}
             </div>
 
