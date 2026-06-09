@@ -21,13 +21,6 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/tracker', trackerRoutes);
 app.use('/api/shares', sharesRoutes);
 
-if (isProd) {
-  app.use(express.static(path.join(__dirname, '../dist')));
-  app.get('(.*)', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist', 'index.html'));
-  });
-}
-
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`API server running on port ${PORT} [${isProd ? 'production' : 'development'}]`);
 });
