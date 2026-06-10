@@ -8,8 +8,8 @@ const SECRET = process.env.JWT_SECRET || 'schedulerapp-jwt-secret-2026-change-in
 
 const cookieOpts = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax',
+  secure: true,
+  sameSite: 'none',  // changed from 'lax'
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
