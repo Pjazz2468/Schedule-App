@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL || '/api';
+const BASE = 'https://schedule-app-k0ob.onrender.com/api';
 
 const req = async (method, path, body) => {
   const res = await fetch(`${BASE}${path}`, {
