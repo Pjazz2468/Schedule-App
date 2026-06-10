@@ -1018,7 +1018,7 @@ export default function App() {
 
       {/* Click-away for workspace dropdown */}
       {workspaceOpen && (
-        <div className="fixed inset-0 z-40" onClick={() => setWorkspaceOpen(false)} />
+        <div className="fixed inset-0 z-30" onClick={() => setWorkspaceOpen(false)} />
       )}
 
       {/* API Loading bar */}
