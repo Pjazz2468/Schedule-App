@@ -12,7 +12,10 @@ const app = express();
 const isProd = process.env.NODE_ENV === 'production';
 const PORT = isProd ? (process.env.PORT || 5000) : 3001;
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ 
+  origin: 'https://schedule-app-blue-sigma.vercel.app', 
+  credentials: true 
+}));
 app.use(express.json());
 app.use(cookieParser());
 
