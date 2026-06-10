@@ -976,7 +976,7 @@ export default function App() {
               {workspaceOpen && (
                 <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 min-w-[180px] overflow-hidden">
                   <button
-                    onClick={() => { setViewingUser(null); setWorkspaceOpen(false); }}
+                    onMouseDown={() => { setViewingUser(null); setWorkspaceOpen(false); }}
                     className={`w-full text-left px-4 py-2.5 text-sm font-semibold flex items-center gap-2 ${!viewingUser ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                   >
                     <User size={14} /> My Workspace
@@ -984,7 +984,7 @@ export default function App() {
                   {receivedShares.map(s => (
                     <button
                       key={s.id}
-                      onClick={() => { setViewingUser(s); setWorkspaceOpen(false); }}
+                      onMouseDown={() => { setViewingUser(s); setWorkspaceOpen(false); }}
                       className={`w-full text-left px-4 py-2.5 text-sm font-semibold flex items-center gap-2 ${viewingUser?.owner_id === s.owner_id ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                     >
                       {s.role === 'admin' ? <Shield size={14} className="text-purple-500" /> : <Eye size={14} className="text-gray-400" />}
