@@ -941,7 +941,7 @@ export default function App() {
     <div className="h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col w-full max-w-md mx-auto relative shadow-2xl overflow-hidden sm:border-x border-gray-200 dark:border-gray-700">
 
       {/* Top Header */}
-      <header className="bg-white dark:bg-gray-800 px-4 pt-8 pb-3 shadow-sm z-20 relative">
+      <header className="bg-white dark:bg-gray-800 px-4 pt-14 pb-3 shadow-sm z-20 relative">
         {/* Row 1: title + user */}
         <div className="flex justify-between items-center mb-2">
           <h1 className="text-2xl font-extrabold tracking-tight text-gray-800 dark:text-gray-100">
