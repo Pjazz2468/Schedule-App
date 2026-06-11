@@ -1017,10 +1017,7 @@ export default function App() {
       </header>
 
       {/* Click-away for workspace dropdown */}
-      {workspaceOpen && (
-        <div className="fixed inset-0 z-30" onClick={() => setWorkspaceOpen(false)} />
-      )}
-
+    
       {/* API Loading bar */}
       {apiLoading && (
         <div className="h-0.5 bg-gray-200 dark:bg-gray-700 overflow-hidden z-10">
