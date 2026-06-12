@@ -1,3 +1,6 @@
+input, select, textarea {
+  font-size: 16px !important;
+}
 @import "tailwindcss";
 
 @variant dark (&:where(.dark, .dark *));
