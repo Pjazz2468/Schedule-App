@@ -2,16 +2,8 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
-
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET || 'schedulerapp-jwt-secret-2026-change-in-prod';
-
-const cookieOpts = {
-  httpOnly: true,
-  secure: true,
-  sameSite: 'none',  // changed from 'lax'
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-};
 
 router.post('/register', async (req, res) => {
   const { email, name, password } = req.body;
@@ -24,9 +16,8 @@ router.post('/register', async (req, res) => {
       [email.toLowerCase().trim(), name.trim(), hash]
     );
     const user = result.rows[0];
-    const token = jwt.sign({ userId: user.id }, SECRET, { expiresIn: '7d' });
-    res.cookie('token', token, cookieOpts);
-    res.json({ user });
+    const token = jwt.sign({ userId: user.id }, SECRET, { expiresIn: '30d' });
+    res.json({ user, token });
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ error: 'Email already registered' });
     console.error(err);
@@ -43,9 +34,8 @@ router.post('/login', async (req, res) => {
     if (!user) return res.status(401).json({ error: 'Invalid email or password' });
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Invalid email or password' });
-    const token = jwt.sign({ userId: user.id }, SECRET, { expiresIn: '7d' });
-    res.cookie('token', token, cookieOpts);
-    res.json({ user: { id: user.id, email: user.email, name: user.name } });
+    const token = jwt.sign({ userId: user.id }, SECRET, { expiresIn: '30d' });
+    res.json({ user: { id: user.id, email: user.email, name: user.name }, token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
@@ -53,12 +43,12 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  res.clearCookie('token');
   res.json({ ok: true });
 });
 
 router.get('/me', async (req, res) => {
-  const token = req.cookies?.token;
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (!token) return res.status(401).json({ error: 'Not authenticated' });
   try {
     const payload = jwt.verify(token, SECRET);
