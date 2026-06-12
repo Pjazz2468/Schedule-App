@@ -1,10 +1,11 @@
 const BASE = 'https://schedule-app-k0ob.onrender.com/api';
-
 const req = async (method, path, body) => {
+  const token = localStorage.getItem('token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
   const res = await fetch(`${BASE}${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -16,9 +17,20 @@ const req = async (method, path, body) => {
 
 export const api = {
   me: () => req('GET', '/auth/me'),
-  login: (data) => req('POST', '/auth/login', data),
-  register: (data) => req('POST', '/auth/register', data),
-  logout: () => req('POST', '/auth/logout'),
+  login: async (data) => {
+    const result = await req('POST', '/auth/login', data);
+    localStorage.setItem('token', result.token);
+    return result;
+  },
+  register: async (data) => {
+    const result = await req('POST', '/auth/register', data);
+    localStorage.setItem('token', result.token);
+    return result;
+  },
+  logout: () => {
+    localStorage.removeItem('token');
+    return Promise.resolve({ ok: true });
+  },
 
   getEvents: (ownerId) => req('GET', `/calendar/events${ownerId ? `?owner=${ownerId}` : ''}`),
   saveEvents: (dateKey, events, ownerId) =>
