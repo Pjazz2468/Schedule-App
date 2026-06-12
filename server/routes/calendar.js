@@ -6,7 +6,8 @@ const router = express.Router();
 const SECRET = process.env.JWT_SECRET || 'schedulerapp-jwt-secret-2026-change-in-prod';
 
 const requireAuth = (req, res, next) => {
-  const token = req.cookies?.token;
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (!token) return res.status(401).json({ error: 'Not authenticated' });
   try {
     req.userId = jwt.verify(token, SECRET).userId;
