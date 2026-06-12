@@ -70,6 +70,9 @@ export default function App() {
   // ── Modals ──
   const [selectedDate, setSelectedDate] = useState(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [dueReminders, setDueReminders] = useState([]);
+  const [showReminderPopup, setShowReminderPopup] = useState(false);
+  const [upcomingReminders, setUpcomingReminders] = useState([]);
 
   // ── Tracker ──
   const [trackerMonth, setTrackerMonth] = useState(() => load('trackerMonth', 4));
@@ -217,6 +220,37 @@ export default function App() {
       });
     });
   }, []); // eslint-disable-line
+  // ── Check for due/upcoming reminders on app open ──
+  useEffect(() => {
+    const now = new Date();
+    const todayKey = formatDateKey(now.getFullYear(), now.getMonth(), now.getDate());
+    const due = [];
+    const upcoming = [];
+
+    Object.entries(events).forEach(([key, evList]) => {
+      const dateKey = key.split('_').slice(1).join('_');
+      if (dateKey !== todayKey) return;
+      evList.forEach(ev => {
+        if (!ev.reminder || !ev.time) return;
+        const [h, m] = ev.time.split(':').map(Number);
+        const eventTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
+        const diffMs = now - eventTime;
+        const diffMinutes = diffMs / 60000;
+
+        if (diffMinutes >= 0 && diffMinutes <= 120) {
+          due.push({ ...ev, dateKey });
+        } else if (diffMinutes < 0) {
+          upcoming.push({ ...ev, dateKey });
+        }
+      });
+    });
+
+   if (due.length > 0) {
+      setDueReminders(due);
+      setShowReminderPopup(true);
+    }
+    setUpcomingReminders(upcoming);
+  }, []); // eslint-disable-line
 
   // ── Today scroll ──
   const scrollToToday = () => {
@@ -331,6 +365,35 @@ export default function App() {
   // COMPONENTS
   // ────────────────────────────────────────────
 
+  const ReminderPopup = () => {
+    if (!showReminderPopup || dueReminders.length === 0) return null;
+    return (
+      <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 w-full max-w-sm rounded-2xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Bell size={22} className="text-orange-500" />
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Reminders</h3>
+          </div>
+          <div className="flex flex-col gap-2 mb-5 max-h-60 overflow-y-auto">
+            {dueReminders.map(ev => (
+              <div key={ev.id} className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-xl p-3">
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{ev.text}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
+                  <Clock size={11} /> {ev.time}
+                </p>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => setShowReminderPopup(false)}
+            className="w-full bg-blue-600 text-white p-3 rounded-xl font-bold"
+          >
+            Got it
+          </button>
+        </div>
+      </div>
+    );
+  };
   const EventModal = () => {
     if (!isEventModalOpen || !selectedDate) return null;
     const { dateKey } = selectedDate;
@@ -1030,6 +1093,15 @@ export default function App() {
         {activeTab === 'calendar' ? (
           <div className="h-full flex flex-col relative">
             {/* Grouping Toolbar */}
+            {/* Reminders Banner */}
+            {upcomingReminders.length > 0 && !viewingUser && (
+              <div className="px-3 py-2 bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-700 flex items-center gap-2 shrink-0">
+                <Bell size={14} className="text-orange-500 shrink-0" />
+                <span className="text-xs font-semibold text-orange-700 dark:text-orange-300 truncate">
+                  {upcomingReminders.length} reminder{upcomingReminders.length > 1 ? 's' : ''} today: {upcomingReminders.map(r => `${r.time} ${r.text}`).join(', ')}
+                </span>
+              </div>
+            )}
             <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center z-10 shrink-0 gap-2">
               <span className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate flex items-center gap-1.5">
                 {isGroupingMode
@@ -1090,6 +1162,7 @@ export default function App() {
       <EventModal />
       <TrackerModal />
       <ShareModal />
+      <ReminderPopup />
     </div>
   );
 }
